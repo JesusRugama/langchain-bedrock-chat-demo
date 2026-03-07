@@ -1,6 +1,7 @@
 ## Project Summary
 
 LangChainBedrockChat is a minimal, production-ready starter for a conversational chatbot built with:
+
 - **LangChain.js** (`ChatPromptTemplate`, LCEL, `RunnableWithMessageHistory`)
 - **Amazon Bedrock** via `ChatBedrockConverse`
 - **Node.js + TypeScript**
@@ -11,6 +12,7 @@ The goal is to provide a clean baseline that is easy to understand, run, and ext
 ## Scope
 
 This document covers **Phase 1 only**:
+
 - CLI conversational chatbot
 - LangChain.js + AWS Bedrock (Converse API)
 - LCEL chain with message history
@@ -28,7 +30,7 @@ No roadmap or future planning content is included here.
 
 ## Architecture (Current)
 
-~~~
+```
 Entry Point (CLI)
       ↓
   Chain Layer (LCEL pipeline)
@@ -40,11 +42,11 @@ Entry Point (CLI)
  LangChain Bedrock Integration
       ↓
  AWS Bedrock (Converse API)
-~~~
+```
 
 ## Source Structure (Current)
 
-~~~
+```
 src/
   config/   # env variables and constants
   llm/      # ChatBedrockConverse setup
@@ -52,7 +54,7 @@ src/
   memory/   # in-memory message history
   chain/    # LCEL chain + history wrapper
   index.ts  # CLI entry point (REPL loop)
-~~~
+```
 
 ## Runtime Flow
 
