@@ -1,52 +1,25 @@
+import { ChatBedrockConverse } from "@langchain/aws";
 import chalk from "chalk";
-import { Command } from "commander";
 import ora from "ora";
-import prompts from "prompts";
-
-const program = new Command();
-
-program
-  .name("langchain-bedrock-chat-demo")
-  .description("Basic CLI scaffold for the Phase 1 chat app")
-  .parse();
-
-function exitCLI(): void {
-  console.log(chalk.gray("\n\nGoodbye!"));
-  process.exit(0);
-}
+import { runChatLoop } from "./cli.js";
 
 async function main(): Promise<void> {
-  // Spinner
-  const spinner = ora("Bootstrapping CLI...").start();
-  await new Promise((resolve) => setTimeout(resolve, 450));
-  spinner.succeed("CLI ready");
+  const model = new ChatBedrockConverse({
+    model: process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0",
+    region: process.env.AWS_REGION || "us-east-1",
+  });
 
-  console.log(chalk.gray("Type 'exit' or 'quit' to end the session. Press Ctrl+C to quit.\n"));
-
-  while (true) {
-    const answer = await prompts(
-      {
-        type: "text",
-        name: "message",
-        message: ">",
-      },
-      {
-        onCancel: exitCLI,
-      },
-    );
-
-    const message = typeof answer.message === "string" ? answer.message.trim() : "";
-
-    if (!message) {
-      continue;
+  await runChatLoop(async (message) => {
+    const thinkingSpinner = ora("Thinking...").start();
+    try {
+      const response = await model.invoke(message);
+      thinkingSpinner.stop();
+      console.log(chalk.cyan("assistant:"), chalk.white(response.content + "\n"));
+    } catch (error) {
+      thinkingSpinner.fail("Error");
+      console.error(chalk.red("Error:"), error instanceof Error ? error.message : String(error));
     }
-
-    if (["exit", "quit"].includes(message.toLowerCase())) {
-      exitCLI();
-    }
-
-    console.log(chalk.cyan("assistant:"), chalk.white(`You typed: ${message}\n`));
-  }
+  });
 }
 
 void main();
