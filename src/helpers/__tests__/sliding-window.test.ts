@@ -1,29 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
-import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
-
-/**
- * Applies sliding window mitigation to chat history.
- * Keeps only the last N messages and adds a system message if context was trimmed.
- */
-async function applySlidingWindow(
-  history: InMemoryChatMessageHistory,
-  windowSize: number
-): Promise<BaseMessage[]> {
-  const allMessages = await history.getMessages();
-  
-  if (allMessages.length <= windowSize) {
-    return allMessages;
-  }
-  
-  const recentMessages = allMessages.slice(-windowSize);
-  
-  const systemMessage = new SystemMessage(
-    "You are in an ongoing conversation. Earlier messages have been trimmed to manage context length."
-  );
-  
-  return [systemMessage, ...recentMessages];
-}
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { applySlidingWindow } from "../sliding-window.js";
 
 describe("Sliding Window Mitigation", () => {
   let history: InMemoryChatMessageHistory;

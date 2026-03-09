@@ -1,11 +1,11 @@
 import { ChatBedrockConverse } from "@langchain/aws";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import chalk from "chalk";
 import ora from "ora";
-import { runChatLoop } from "./cli.js";
-import { BedrockLogger } from "./logger.js";
-import { applySlidingWindow, normalizeWindowSize } from "./sliding-window.js";
+import { runChatLoop } from "./helpers/cli-loop.js";
+import { BedrockLogger } from "./helpers/logger.js";
+import { normalizeWindowSize } from "./helpers/sliding-window.js";
+import { handleChatMessage } from "./chat-handler.js";
 
 const CHAT_HISTORY_WINDOW = normalizeWindowSize(
   parseInt(process.env.CHAT_HISTORY_WINDOW || "10", 10)
@@ -13,8 +13,9 @@ const CHAT_HISTORY_WINDOW = normalizeWindowSize(
 
 async function main(): Promise<void> {
   const region = process.env.AWS_REGION || "us-east-1";
+  const modelId = process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0";
   const model = new ChatBedrockConverse({
-    model: process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0",
+    model: modelId,
     region,
   });
 
@@ -29,54 +30,19 @@ async function main(): Promise<void> {
 
   await runChatLoop(async (message) => {
     const thinkingSpinner = ora("Thinking...").start();
-    const startTime = Date.now();
+
     try {
-      await history.addMessage(new HumanMessage(message));
-      
-      const messagesToSend = await applySlidingWindow(history, CHAT_HISTORY_WINDOW);
-      const response = await model.invoke(messagesToSend);
-      
-      const aiMessage = new AIMessage(response.content.toString());
-      await history.addMessage(aiMessage);
-      
-      const latencyMs = Date.now() - startTime;
-      
-      if (logger) {
-        await logger.logInvocation({
-          timestamp: Date.now(),
-          model: process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0",
-          messageCount: messagesToSend.length,
-          messages: [
-            ...messagesToSend.map(msg => ({
-              role: msg._getType(),
-              content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
-            })),
-            {
-              role: 'ai',
-              content: response.content.toString(),
-            },
-          ],
-          inputTokens: response.usage_metadata?.input_tokens,
-          outputTokens: response.usage_metadata?.output_tokens,
-          latencyMs,
-        });
-      }
-      
+      const response = await handleChatMessage(message, {
+        model,
+        history,
+        windowSize: CHAT_HISTORY_WINDOW,
+        logger,
+        modelId,
+      });
+
       thinkingSpinner.stop();
       console.log(chalk.cyan("assistant:"), chalk.white(response.content + "\n"));
     } catch (error) {
-      const latencyMs = Date.now() - startTime;
-      
-      if (logger) {
-        await logger.logInvocation({
-          timestamp: Date.now(),
-          model: process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0",
-          messageCount: (await history.getMessages()).length,
-          latencyMs,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-      
       thinkingSpinner.fail("Error");
       console.error(chalk.red("Error:"), error instanceof Error ? error.message : String(error));
     }
