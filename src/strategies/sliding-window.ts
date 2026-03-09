@@ -1,5 +1,21 @@
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import { BaseMessage } from "@langchain/core/messages";
+import { MemoryStrategy } from "./types.js";
+
+export function createSlidingWindowStrategy(windowSize: number): MemoryStrategy {
+  const normalized = normalizeWindowSize(windowSize);
+
+  return async (history: InMemoryChatMessageHistory): Promise<BaseMessage[]> => {
+    const allMessages = await history.getMessages();
+
+    if (allMessages.length <= normalized) {
+      return allMessages;
+    }
+
+    return allMessages.slice(-normalized);
+  };
+}
+
 
 /**
  * Applies sliding window mitigation to chat history.

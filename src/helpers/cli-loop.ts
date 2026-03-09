@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import prompts from "prompts";
+import { StrategyName } from "../strategies/types.js";
 
 /**
  * Callback function type for handling user messages in the chat loop.
@@ -16,6 +17,28 @@ export type OnRequest = (message: string) => Promise<void>;
 function exitCLI(): void {
   console.log(chalk.gray("\n\nGoodbye!"));
   process.exit(0);
+}
+
+/**
+ * Prompts the user to select a memory strategy at CLI startup.
+ */
+export async function selectStrategy(): Promise<StrategyName> {
+  const answer = await prompts(
+    {
+      type: "select",
+      name: "strategy",
+      message: "Select a memory strategy",
+      choices: [
+        { title: "Sliding Window", description: "Keep last N messages, drop older ones", value: "sliding-window" },
+        { title: "Summarization", description: "Summarize older messages, keep recent ones", value: "summarization" },
+        { title: "RAG (Hybrid)", description: "Sliding window + vector search for key facts", value: "rag" },
+      ],
+      initial: 0,
+    },
+    { onCancel: exitCLI }
+  );
+
+  return answer.strategy;
 }
 
 /**

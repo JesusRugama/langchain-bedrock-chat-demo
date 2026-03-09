@@ -2,14 +2,28 @@ import { ChatBedrockConverse } from "@langchain/aws";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import chalk from "chalk";
 import ora from "ora";
-import { runChatLoop } from "./helpers/cli-loop.js";
+import { runChatLoop, selectStrategy } from "./helpers/cli-loop.js";
 import { BedrockLogger } from "./helpers/logger.js";
-import { normalizeWindowSize } from "./helpers/sliding-window.js";
 import { handleChatMessage } from "./chat-handler.js";
+import { createSlidingWindowStrategy } from "./strategies/sliding-window.js";
+import { StrategyName, MemoryStrategy } from "./strategies/types.js";
 
-const CHAT_HISTORY_WINDOW = normalizeWindowSize(
-  parseInt(process.env.CHAT_HISTORY_WINDOW || "10", 10)
-);
+const WINDOW_SIZE = parseInt(process.env.CHAT_HISTORY_WINDOW || "10", 10);
+
+function getMemoryStrategy(name: StrategyName): MemoryStrategy {
+  switch (name) {
+    case "sliding-window":
+      return createSlidingWindowStrategy(WINDOW_SIZE);
+    case "summarization":
+      // TODO: implement summarization strategy
+      console.log(chalk.yellow("Summarization not yet implemented, falling back to sliding window.\n"));
+      return createSlidingWindowStrategy(WINDOW_SIZE);
+    case "rag":
+      // TODO: implement RAG strategy
+      console.log(chalk.yellow("RAG not yet implemented, falling back to sliding window.\n"));
+      return createSlidingWindowStrategy(WINDOW_SIZE);
+  }
+}
 
 async function main(): Promise<void> {
   const region = process.env.AWS_REGION || "us-east-1";
@@ -18,6 +32,10 @@ async function main(): Promise<void> {
     model: modelId,
     region,
   });
+
+  const strategyName = await selectStrategy();
+  const memoryStrategy = getMemoryStrategy(strategyName);
+  console.log(chalk.green(`\nUsing strategy: ${strategyName}\n`));
 
   const history = new InMemoryChatMessageHistory();
 
@@ -35,7 +53,7 @@ async function main(): Promise<void> {
       const response = await handleChatMessage(message, {
         model,
         history,
-        windowSize: CHAT_HISTORY_WINDOW,
+        memoryStrategy,
         logger,
         modelId,
       });
