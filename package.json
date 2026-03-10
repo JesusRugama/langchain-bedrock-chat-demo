@@ -5,7 +5,7 @@
   "type": "module",
   "description": "CLI-first LangChain.js + AWS Bedrock chatbot starter",
   "scripts": {
-    "cli": "node --env-file=.env --import tsx/esm src/index.ts",
+    "cli": "node --env-file=.env --import tsx/esm src/index.cli.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint . --ext .ts",
