@@ -1,0 +1,15 @@
+# Knowledge Base Documents
+
+Place your documents here to be uploaded to the Knowledge Base.
+
+Supported formats:
+- Text: .txt, .md, .html
+- Documents: .doc, .docx, .pdf
+- Spreadsheets: .csv, .xls, .xlsx
+- Images: .jpeg, .png
+
+## Usage
+
+1. Add your documents to this directory
+2. Run: `./scripts/upload-docs.sh` to upload to S3
+3. Run: `./scripts/trigger-ingestion.sh` to process them into the Knowledge Base

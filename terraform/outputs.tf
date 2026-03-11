@@ -23,22 +23,22 @@ output "vector_dimensions" {
   value       = var.vector_dimensions
 }
 
-# output "knowledge_base_id" {
-#   description = "Knowledge Base ID for querying"
-#   value       = aws_bedrockagent_knowledge_base.main.id
-# }
-#
-# output "knowledge_base_arn" {
-#   description = "Knowledge Base ARN"
-#   value       = aws_bedrockagent_knowledge_base.main.arn
-# }
-#
-# output "knowledge_source_bucket" {
-#   description = "S3 bucket name for uploading source documents"
-#   value       = aws_s3_bucket.knowledge_source.bucket
-# }
-#
-# output "data_source_id" {
-#   description = "Data source ID for syncing documents"
-#   value       = aws_bedrockagent_data_source.s3_source.data_source_id
-# }
+output "knowledge_base_id" {
+  description = "Knowledge Base ID for querying"
+  value       = aws_bedrockagent_knowledge_base.main.id
+}
+
+output "knowledge_base_arn" {
+  description = "Knowledge Base ARN"
+  value       = aws_bedrockagent_knowledge_base.main.arn
+}
+
+output "knowledge_source_bucket" {
+  description = "S3 bucket name for uploading source documents"
+  value       = aws_s3_bucket.knowledge_source.bucket
+}
+
+output "data_source_id" {
+  description = "Data source ID for syncing documents"
+  value       = aws_bedrockagent_data_source.s3_source.data_source_id
+}
